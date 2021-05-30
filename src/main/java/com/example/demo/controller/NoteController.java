@@ -2,56 +2,49 @@ package com.example.demo.controller;
 
 import com.example.demo.domain.Note;
 import com.example.demo.repository.NoteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/notes")
+@RequestMapping("/notes")
 public class NoteController {
 
-    @Autowired
-    private NoteRepository noteRepository;
+    private final NoteRepository noteRepository;
 
+    public NoteController(NoteRepository noteRepository) {
+        this.noteRepository = noteRepository;
+    }
     @GetMapping
-    public ResponseEntity<List<Note>> getAll(@RequestParam(required = false, defaultValue = "") String keyword) {
-        return ResponseEntity.ok(keyword.equals("") ? noteRepository.findAll() : noteRepository.findByKeyword(keyword));
+    public List<Note> getNotes() {
+        return noteRepository.findAll();
     }
 
-    @GetMapping("{id}")
-    public ResponseEntity<Note> getById(@PathVariable long id) {
-        Note note = noteRepository.findById(id);
-        if (note == null)
-            return ResponseEntity.notFound().build();
-        else
-            return ResponseEntity.ok(note);
+    @GetMapping("/{id}")
+    public Note getNote(@PathVariable Long id) {
+        return noteRepository.findById(id).orElseThrow(RuntimeException::new);
     }
 
     @PostMapping
-    public Note create(@RequestBody Note note) {
-        note.setId(null);
-        return noteRepository.save(note);
+    public ResponseEntity createNote(@RequestBody Note note) throws URISyntaxException {
+        Note savedNote = noteRepository.save(note);
+        return ResponseEntity.created(new URI("/notes/" + savedNote.getId())).body(savedNote);
     }
 
-    @PutMapping
-    public ResponseEntity<Note> update(@RequestBody Note note) {
-        Note n = noteRepository.findById(note.getId());
-        if (n == null)
-            return ResponseEntity.notFound().build();
-        n = noteRepository.save(note);
-        return ResponseEntity.ok(n);
+    @PutMapping("/{id}")
+    public ResponseEntity updateNote(@PathVariable Long id, @RequestBody Note note) {
+        Note currentNote = noteRepository.findById(id).orElseThrow(RuntimeException::new);
+        currentNote.setText(note.getText());
+        currentNote = noteRepository.save(note);
+        return ResponseEntity.ok(currentNote);
     }
 
-    @DeleteMapping("{id}")
-    public ResponseEntity<?> delete(@PathVariable long id) {
-        Note note = noteRepository.findById(id);
-        if (note == null)
-            return ResponseEntity.notFound().build();
-        else {
-            noteRepository.deleteById(id);
-            return ResponseEntity.ok().build();
-        }
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteNote(@PathVariable Long id) {
+        noteRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }

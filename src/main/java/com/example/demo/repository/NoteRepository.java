@@ -1,6 +1,8 @@
 package com.example.demo.repository;
 
+
 import com.example.demo.domain.Note;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,8 +11,10 @@ import javax.persistence.PersistenceContext;
 import java.util.List;
 
 @Repository
-public class NoteRepository {
+public interface NoteRepository extends JpaRepository<Note, Long> {
 
+
+/*
     @PersistenceContext
     private EntityManager em;
 
@@ -35,5 +39,5 @@ public class NoteRepository {
     public void deleteById(long id) {
         Note todo = findById(id);
         em.remove(todo);
-    }
+    }*/
 }
